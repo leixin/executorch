@@ -193,10 +193,11 @@ class BackendDelegate final {
       }
       case executorch_flatbuffer::DataLocation::SEGMENT: {
         const char* backend_id = delegate.id()->c_str();
-        return program->LoadSegment(DataLoader::SegmentInfo(
-            DataLoader::SegmentInfo::Type::Backend,
-            processed->index(),
-            backend_id));
+        return program->LoadSegment(
+            DataLoader::SegmentInfo(
+                DataLoader::SegmentInfo::Type::Backend,
+                processed->index(),
+                backend_id));
       }
       default:
         ET_LOG(
@@ -475,9 +476,9 @@ Error Method::parse_values(const NamedDataMap* external_data_map) {
             static_cast<const executorch_flatbuffer::Int*>(val)->int_val());
       } break;
       case executorch_flatbuffer::KernelTypes::Double: {
-        new (&values_[i])
-            EValue(static_cast<const executorch_flatbuffer::Double*>(val)
-                       ->double_val());
+        new (&values_[i]) EValue(
+            static_cast<const executorch_flatbuffer::Double*>(val)
+                ->double_val());
       } break;
       case executorch_flatbuffer::KernelTypes::Bool: {
         new (&values_[i]) EValue(
@@ -1060,8 +1061,21 @@ Error Method::init(
                 n_value_);
             chain_instruction_arg_lists[instr_idx] = InstructionArgs();
           } break;
-          default: {
+          case executorch_flatbuffer::InstructionArguments::FreeCall: {
+            auto index =
+                static_cast<const executorch_flatbuffer::FreeCall*>(instr_args)
+                    ->value_index();
+            ET_CHECK_OR_RETURN_ERROR(
+                index >= 0 && static_cast<size_t>(index) < n_value_,
+                InvalidProgram,
+                "Index %zd negative or >= %" ET_PRIsize_t,
+                static_cast<ssize_t>(index),
+                n_value_);
             chain_instruction_arg_lists[instr_idx] = InstructionArgs();
+          } break;
+          default: {
+            ET_CHECK_OR_RETURN_ERROR(
+                false, InvalidProgram, "Unknown instruction type");
           } break;
         }
       }
@@ -1501,7 +1515,7 @@ Error Method::execute_instruction() {
       // We know that instr_args_as_FreeCall is non-null because it was checked
       // at init time.
       auto free_call = instruction->instr_args_as_FreeCall();
-      auto t = values_[free_call->value_index()].toTensor();
+      auto t = mutable_value(free_call->value_index()).toTensor();
       internal::reset_data_ptr(t);
     } break;
     default:

@@ -66,6 +66,8 @@ namespace executorch {
 namespace aten {
 
 using TensorShapeDynamism = executorch::runtime::TensorShapeDynamism;
+template <typename T>
+using Result = executorch::runtime::Result<T>;
 
 using std::nullopt;
 using std::nullopt_t;
@@ -105,7 +107,7 @@ template <typename T>
 using OptionalArrayRef = c10::OptionalArrayRef<T>;
 using OptionalIntArrayRef = OptionalArrayRef<int64_t>;
 
-inline ssize_t compute_numel(const SizesType* sizes, ssize_t dim) {
+inline Result<ssize_t> compute_numel(const SizesType* sizes, ssize_t dim) {
   return static_cast<ssize_t>(
       c10::multiply_integers(c10::ArrayRef<SizesType>(sizes, dim)));
 }

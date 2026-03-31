@@ -26,6 +26,7 @@ using executorch::runtime::get_op_function_from_registry;
 using executorch::runtime::KernelRuntimeContext;
 using executorch::runtime::registry_has_op_function;
 using executorch::runtime::Span;
+using executorch::runtime::TensorShapeDynamism;
 using std::optional;
 
 Tensor& my_op_out(KernelRuntimeContext& ctx, const Tensor& a, Tensor& out) {
@@ -104,7 +105,7 @@ TEST_F(MakeBoxedFromUnboxedFunctorTest, UnboxLogicWorks) {
   TensorImpl::SizesType sizes[1] = {5};
   TensorImpl::DimOrderType dim_order[1] = {0};
   int32_t data[5] = {0, 0, 0, 0, 0};
-  auto a_impl = TensorImpl(ScalarType::Int, 1, sizes, data, dim_order, nullptr);
+  auto a_impl = TensorImpl(ScalarType::Int, 1, sizes, 5, data, dim_order);
   auto a = Tensor(&a_impl);
 
   // get boxed callable

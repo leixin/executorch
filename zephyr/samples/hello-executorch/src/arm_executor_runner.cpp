@@ -163,10 +163,15 @@ Result<BufferCleanup> prepare_input_tensors(
       }
     }
 
+    ssize_t numel = 1;
+    for (size_t i = 0; i < tensor_meta.get().sizes().size(); i++) {
+      numel *= tensor_meta.get().sizes()[i];
+    }
     TensorImpl impl = TensorImpl(
         tensor_meta.get().scalar_type(),
         tensor_meta.get().sizes().size(),
         const_cast<TensorImpl::SizesType*>(tensor_meta.get().sizes().data()),
+        numel,
         data_ptr,
         const_cast<TensorImpl::DimOrderType*>(
             tensor_meta.get().dim_order().data()));

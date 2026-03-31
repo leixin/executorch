@@ -302,10 +302,15 @@ int main(int argc, char** argv) {
     ET_CHECK_MSG(
         input_data_reader.nbytes(input_index) == tensor_meta->nbytes(),
         "Given inputs size is invalid");
+    ssize_t numel = 1;
+    for (size_t i = 0; i < tensor_meta->sizes().size(); i++) {
+      numel *= tensor_meta->sizes()[i];
+    }
     TensorImpl impl = TensorImpl(
         tensor_meta->scalar_type(),
         tensor_meta->sizes().size(),
         const_cast<TensorImpl::SizesType*>(tensor_meta->sizes().data()),
+        numel,
         input_data_reader.get(input_index),
         const_cast<TensorImpl::DimOrderType*>(tensor_meta->dim_order().data()));
     Error ret = method->set_input(Tensor(&impl), input_index);

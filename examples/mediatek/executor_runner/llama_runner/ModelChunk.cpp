@@ -560,8 +560,12 @@ void ModelChunk::SetBackendInputs() {
     std::vector dim_order(dim_order_raw.begin(), dim_order_raw.end());
     auto buffer_data = mInputBufferInfos[i].data;
 
+    ssize_t numel = 1;
+    for (size_t j = 0; j < dim; j++) {
+      numel *= sizes[j];
+    }
     TensorImpl impl = TensorImpl(
-        scalar_type, dim, sizes.data(), buffer_data, dim_order.data());
+        scalar_type, dim, sizes.data(), numel, buffer_data, dim_order.data());
     Tensor tensor(&impl);
     const auto error = method.set_input(tensor, i);
     ET_CHECK_MSG(

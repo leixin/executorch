@@ -260,8 +260,12 @@ int main(int argc, char** argv) {
       std::vector sizes(sizes_raw.begin(), sizes_raw.end());
       std::vector dim_order(dim_order_raw.begin(), dim_order_raw.end());
 
+      ssize_t numel = 1;
+      for (size_t i = 0; i < dim; i++) {
+        numel *= sizes[i];
+      }
       TensorImpl impl = TensorImpl(
-          scalar_type, dim, sizes.data(), data_ptr, dim_order.data());
+          scalar_type, dim, sizes.data(), numel, data_ptr, dim_order.data());
 
       Tensor tensor(&impl);
       Error ret = method->set_input(tensor, i);

@@ -132,7 +132,7 @@ TEST_F(TensorFactoryTest, MakeIntTensor) {
   uint8_t dim_order[dim] = {0, 1};
   int32_t strides[dim] = {2, 1}; // Contiguous
   TensorImpl impl =
-      TensorImpl(ScalarType::Int, dim, sizes, data, dim_order, strides);
+      TensorImpl(ScalarType::Int, dim, sizes, 4, data, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -161,7 +161,7 @@ TEST_F(TensorFactoryTest, MakeFloatTensor) {
   uint8_t dim_order[dim] = {0, 1};
   int32_t strides[dim] = {2, 1}; // Contiguous
   TensorImpl impl =
-      TensorImpl(ScalarType::Float, dim, sizes, data, dim_order, strides);
+      TensorImpl(ScalarType::Float, dim, sizes, 4, data, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -191,7 +191,7 @@ TEST_F(TensorFactoryTest, MakeBoolTensor) {
   uint8_t dim_order[dim] = {0, 1};
   int32_t strides[dim] = {2, 1}; // Contiguous
   TensorImpl impl =
-      TensorImpl(ScalarType::Bool, dim, sizes, data, dim_order, strides);
+      TensorImpl(ScalarType::Bool, dim, sizes, 4, data, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -324,7 +324,7 @@ TEST_F(TensorFactoryTest, MakeStridedIntTensor) {
   uint8_t dim_order[dim] = {1, 0};
   int32_t strides[dim] = {1, 2}; // Incontiguous
   TensorImpl impl =
-      TensorImpl(ScalarType::Int, dim, sizes, data, dim_order, strides);
+      TensorImpl(ScalarType::Int, dim, sizes, 4, data, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -361,7 +361,7 @@ TEST_F(TensorFactoryTest, MakeStridedFloatTensor) {
   uint8_t dim_order[dim] = {1, 0};
   int32_t strides[dim] = {1, 2}; // Incontiguous
   TensorImpl impl =
-      TensorImpl(ScalarType::Float, dim, sizes, data, dim_order, strides);
+      TensorImpl(ScalarType::Float, dim, sizes, 4, data, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -398,7 +398,7 @@ TEST_F(TensorFactoryTest, MakeStridedBoolTensor) {
   uint8_t dim_order[dim] = {1, 0};
   int32_t strides[dim] = {1, 2}; // Incontiguous
   TensorImpl impl =
-      TensorImpl(ScalarType::Bool, dim, sizes, data, dim_order, strides);
+      TensorImpl(ScalarType::Bool, dim, sizes, 4, data, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -437,7 +437,7 @@ TEST_F(TensorFactoryTest, MakeStridedSameStrideTensorSupported) {
   int32_t strides[dim] = {
       30, 10, 2, 10, 2, 1, 2, 10, 10, 10, 30}; // Incontiguous
   TensorImpl impl =
-      TensorImpl(ScalarType::Bool, dim, sizes, {}, dim_order, strides);
+      TensorImpl(ScalarType::Bool, dim, sizes, 0, {}, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -485,8 +485,8 @@ TEST_F(TensorFactoryTest, MakeStridedEmptyDataSupported) {
   int32_t sizes[dim] = {2, 0, 3, 0, 5};
   uint8_t dim_order[dim] = {0, 1, 2, 3, 4};
   int32_t strides[dim] = {15, 15, 5, 5, 1}; // Incontiguous
-  TensorImpl impl =
-      TensorImpl(ScalarType::Int, dim, sizes, /*data=*/{}, dim_order, strides);
+  TensorImpl impl = TensorImpl(
+      ScalarType::Int, dim, sizes, 0, /*data=*/{}, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -518,7 +518,7 @@ TEST_F(TensorFactoryTest, MakeStridedZeroDimSupported) {
   uint8_t dim_order[dim] = {};
   int32_t strides[dim] = {};
   TensorImpl impl =
-      TensorImpl(ScalarType::Int, dim, sizes, data, dim_order, strides);
+      TensorImpl(ScalarType::Int, dim, sizes, 1, data, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -632,7 +632,7 @@ TEST_F(TensorFactoryTest, Full) {
   uint8_t dim_order[dim] = {0, 1};
   int32_t strides[dim] = {2, 1}; // Contiguous
   TensorImpl impl =
-      TensorImpl(ScalarType::Int, dim, sizes, data, dim_order, strides);
+      TensorImpl(ScalarType::Int, dim, sizes, 4, data, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -661,7 +661,7 @@ TEST_F(TensorFactoryTest, FullFloat) {
   uint8_t dim_order[dim] = {0, 1};
   int32_t strides[dim] = {2, 1}; // Contiguous
   TensorImpl impl =
-      TensorImpl(ScalarType::Float, dim, sizes, data, dim_order, strides);
+      TensorImpl(ScalarType::Float, dim, sizes, 4, data, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -688,7 +688,7 @@ TEST_F(TensorFactoryTest, Zeros) {
   uint8_t dim_order[dim] = {0, 1};
   int32_t strides[dim] = {2, 1}; // Contiguous
   TensorImpl impl =
-      TensorImpl(ScalarType::Int, dim, sizes, data, dim_order, strides);
+      TensorImpl(ScalarType::Int, dim, sizes, 4, data, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -715,7 +715,7 @@ TEST_F(TensorFactoryTest, Ones) {
   uint8_t dim_order[dim] = {0, 1};
   int32_t strides[dim] = {2, 1}; // Contiguous
   TensorImpl impl =
-      TensorImpl(ScalarType::Int, dim, sizes, data, dim_order, strides);
+      TensorImpl(ScalarType::Int, dim, sizes, 4, data, dim_order, strides);
   Tensor expected(&impl);
 #endif // !USE_ATEN_LIB
 
@@ -805,6 +805,7 @@ void run_zeros_like_test(Tensor input) {
       input.dim(),
       // static shape tensor so const_cast is fine.
       /*sizes=*/const_cast<SizesType*>(input.sizes().data()),
+      input.numel(),
       /*data=*/expected_data.data(),
       /*dim_order=*/const_cast<DimOrderType*>(input.dim_order().data()),
       /*strides=*/const_cast<StridesType*>(input.strides().data()));
@@ -863,6 +864,7 @@ void run_ones_like_test(Tensor input) {
       input.dim(),
       // static shape tensor so const_cast is fine.
       /*sizes=*/const_cast<SizesType*>(input.sizes().data()),
+      input.numel(),
       /*data=*/expected_data.data(),
       /*dim_order=*/const_cast<DimOrderType*>(input.dim_order().data()),
       /*strides=*/const_cast<StridesType*>(input.strides().data()));

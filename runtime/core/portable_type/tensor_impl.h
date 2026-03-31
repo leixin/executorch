@@ -11,6 +11,7 @@
 #include <executorch/runtime/core/array_ref.h>
 #include <executorch/runtime/core/error.h>
 #include <executorch/runtime/core/portable_type/scalar_type.h>
+#include <executorch/runtime/core/result.h>
 #include <executorch/runtime/core/tensor_shape_dynamism.h>
 
 // Forward declaration of a helper that provides access to internal resizing
@@ -93,6 +94,9 @@ class TensorImpl {
    * @param dim Number of dimensions, and the length of the `sizes` array.
    * @param sizes Sizes of the tensor at each dimension. Must contain `dim`
    *     entries.
+   * @param numel Pre-computed number of elements (product of sizes). Callers
+   *     should validate this with compute_numel() when handling untrusted
+   * input.
    * @param data Pointer to the data, whose size is determined by `type`,
    *     `dim`, and `sizes`. The tensor will not own this memory.
    * @param dim_order Order in which dimensions are laid out in memory.
@@ -101,6 +105,18 @@ class TensorImpl {
    * @param dynamism The mutability of the shape of the tensor.
    */
   TensorImpl(
+      ScalarType type,
+      ssize_t dim,
+      SizesType* sizes,
+      ssize_t numel,
+      void* data = nullptr,
+      DimOrderType* dim_order = nullptr,
+      StridesType* strides = nullptr,
+      TensorShapeDynamism dynamism = TensorShapeDynamism::STATIC);
+
+  /// @deprecated Deprecated in 1.3. Use the overload that takes numel
+  /// explicitly.
+  ET_DEPRECATED TensorImpl(
       ScalarType type,
       ssize_t dim,
       SizesType* sizes,
@@ -265,8 +281,9 @@ class TensorImpl {
 
 /**
  * Compute the number of elements based on the sizes of a tensor.
+ * Returns Error::InvalidArgument if sizes are negative or overflow ssize_t.
  */
-ssize_t compute_numel(
+Result<ssize_t> compute_numel(
     const ::executorch::runtime::etensor::TensorImpl::SizesType* sizes,
     ssize_t dim);
 

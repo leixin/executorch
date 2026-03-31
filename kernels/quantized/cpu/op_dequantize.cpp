@@ -610,14 +610,16 @@ Tensor& dequantize_per_token_out(
   dim_order_to_stride_nocheck(
       input_sizes.data(), input_dim_order.data(), 2, input_strides.data());
   void* input_data = input.mutable_data_ptr();
+  ssize_t reshaped_numel =
+      static_cast<ssize_t>(num_channels) * input.size(input.dim() - 1);
   TensorImpl reshaped_input_impl = TensorImpl(
       input.scalar_type(),
       2,
       input_sizes.data(),
+      reshaped_numel,
       input_data,
       input_dim_order.data(),
-      input_strides.data(),
-      TensorShapeDynamism::STATIC);
+      input_strides.data());
   Tensor reshaped_input(&reshaped_input_impl);
   torch::executor::Error err = resize_tensor(out, input.sizes());
   ET_CHECK_MSG(

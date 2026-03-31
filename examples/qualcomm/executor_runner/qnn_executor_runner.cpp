@@ -341,10 +341,15 @@ int main(int argc, char** argv) {
         "Failed to allocate custom memory. tensor index: %d, bytes: %zu",
         input_index,
         tensor_meta->nbytes());
+    ssize_t numel = 1;
+    for (size_t i = 0; i < tensor_meta->sizes().size(); i++) {
+      numel *= tensor_meta->sizes()[i];
+    }
     TensorImpl impl = TensorImpl(
         tensor_meta->scalar_type(),
         /*dim=*/tensor_meta->sizes().size(),
         const_cast<TensorImpl::SizesType*>(tensor_meta->sizes().data()),
+        numel,
         custom_mem_ptr->GetPtr(),
         const_cast<TensorImpl::DimOrderType*>(tensor_meta->dim_order().data()));
     Error ret = method->set_input(Tensor(&impl), input_index);
@@ -475,13 +480,19 @@ int main(int argc, char** argv) {
         // For pre-allocated use case, we need to call set_input
         // to copy data for the input tensors since they doesn't
         // share the data with in_custom_mem.
+        const auto* sizes_ptr = expected_input_shapes.empty()
+            ? tensor_meta->sizes().data()
+            : expected_input_shapes[input_index].data();
+        ssize_t dim = tensor_meta->sizes().size();
+        ssize_t numel = 1;
+        for (ssize_t i = 0; i < dim; i++) {
+          numel *= sizes_ptr[i];
+        }
         TensorImpl impl = TensorImpl(
             tensor_meta->scalar_type(),
-            /*dim=*/tensor_meta->sizes().size(),
-            const_cast<TensorImpl::SizesType*>(
-                expected_input_shapes.empty()
-                    ? tensor_meta->sizes().data()
-                    : expected_input_shapes[input_index].data()),
+            /*dim=*/dim,
+            const_cast<TensorImpl::SizesType*>(sizes_ptr),
+            numel,
             in_custom_mem[input_index]->GetPtr(),
             const_cast<TensorImpl::DimOrderType*>(
                 tensor_meta->dim_order().data()));

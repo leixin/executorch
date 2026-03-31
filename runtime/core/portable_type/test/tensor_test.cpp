@@ -13,6 +13,7 @@
 #include <executorch/runtime/platform/runtime.h>
 #include <executorch/test/utils/DeathTest.h>
 
+using executorch::runtime::TensorShapeDynamism;
 using executorch::runtime::etensor::ScalarType;
 using executorch::runtime::etensor::Tensor;
 using executorch::runtime::etensor::TensorImpl;
@@ -31,21 +32,22 @@ TEST_F(TensorTest, InvalidScalarType) {
 
   // Undefined, which is sort of a special case since it's not part of the
   // iteration macros but is still a part of the enum.
-  ET_EXPECT_DEATH({ TensorImpl y(ScalarType::Undefined, 1, sizes); }, "");
+  ET_EXPECT_DEATH({ TensorImpl y(ScalarType::Undefined, 1, sizes, 1); }, "");
 
   // Some out-of-range types, also demonstrating that NumOptions is not really a
   // scalar type.
-  ET_EXPECT_DEATH({ TensorImpl y(ScalarType::NumOptions, 1, sizes); }, "");
+  ET_EXPECT_DEATH({ TensorImpl y(ScalarType::NumOptions, 1, sizes, 1); }, "");
   ET_EXPECT_DEATH(
-      { TensorImpl y(static_cast<ScalarType>(127), 1, sizes); }, "");
-  ET_EXPECT_DEATH({ TensorImpl y(static_cast<ScalarType>(-1), 1, sizes); }, "");
+      { TensorImpl y(static_cast<ScalarType>(127), 1, sizes, 1); }, "");
+  ET_EXPECT_DEATH(
+      { TensorImpl y(static_cast<ScalarType>(-1), 1, sizes, 1); }, "");
 }
 
 TEST_F(TensorTest, SetData) {
   TensorImpl::SizesType sizes[1] = {5};
   TensorImpl::DimOrderType dim_order[1] = {0};
   int32_t data[5] = {0, 0, 1, 0, 0};
-  auto a_impl = TensorImpl(ScalarType::Int, 1, sizes, data, dim_order, nullptr);
+  auto a_impl = TensorImpl(ScalarType::Int, 1, sizes, 5, data, dim_order);
   auto a = Tensor(&a_impl);
   EXPECT_EQ(a.const_data_ptr(), data);
   a.set_data(nullptr);
@@ -57,7 +59,8 @@ TEST_F(TensorTest, Strides) {
   TensorImpl::DimOrderType dim_order[2] = {0, 1};
   int32_t data[4] = {0, 0, 1, 1};
   TensorImpl::StridesType strides[2] = {2, 1};
-  auto a_impl = TensorImpl(ScalarType::Int, 2, sizes, data, dim_order, strides);
+  auto a_impl =
+      TensorImpl(ScalarType::Int, 2, sizes, 4, data, dim_order, strides);
   Tensor a(&a_impl);
 
   EXPECT_EQ(a_impl.scalar_type(), ScalarType::Int);
@@ -70,7 +73,7 @@ TEST_F(TensorTest, ModifyDataOfConstTensor) {
   TensorImpl::SizesType sizes[1] = {1};
   TensorImpl::DimOrderType dim_order[2] = {0};
   int32_t data[1] = {1};
-  auto a_impl = TensorImpl(ScalarType::Int, 1, sizes, data, dim_order);
+  auto a_impl = TensorImpl(ScalarType::Int, 1, sizes, 1, data, dim_order);
   const Tensor a(&a_impl);
   a.mutable_data_ptr<int32_t>()[0] = 0;
 

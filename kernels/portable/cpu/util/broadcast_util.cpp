@@ -59,10 +59,15 @@ Tensor make_tensor(
   auto tensor_impl = static_cast<TensorImpl*>(malloc(sizeof(TensorImpl)));
   ET_CHECK_MSG(tensor_impl != nullptr, "Failed to malloc for data TensorImpl");
 
+  ssize_t numel = 1;
+  for (int i = 0; i < dim; i++) {
+    numel *= sizes[i];
+  }
   new (tensor_impl) TensorImpl(
       dtype,
       dim,
       reinterpret_cast<Tensor::SizesType*>(size_data_ptr),
+      numel,
       nullptr,
       reinterpret_cast<Tensor::DimOrderType*>(dim_order_data_ptr),
       reinterpret_cast<Tensor::StridesType*>(strides_data_ptr));

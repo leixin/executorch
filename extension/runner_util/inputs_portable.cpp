@@ -59,6 +59,10 @@ Error fill_and_set_input(
     size_t input_index,
     void* data_ptr,
     bool fill_tensor) {
+  ssize_t numel = 1;
+  for (size_t i = 0; i < tensor_meta.sizes().size(); i++) {
+    numel *= tensor_meta.sizes()[i];
+  }
   TensorImpl impl = TensorImpl(
       tensor_meta.scalar_type(),
       /*dim=*/tensor_meta.sizes().size(),
@@ -67,6 +71,7 @@ Error fill_and_set_input(
       // that the shape is correct; the Method manages its own sizes and
       // dim_order arrays for the input.
       const_cast<TensorImpl::SizesType*>(tensor_meta.sizes().data()),
+      numel,
       data_ptr,
       const_cast<TensorImpl::DimOrderType*>(tensor_meta.dim_order().data()));
   Tensor t(&impl);

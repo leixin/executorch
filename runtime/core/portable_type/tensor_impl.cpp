@@ -27,23 +27,26 @@ namespace etensor {
 
 /**
  * Compute the number of elements based on the sizes of a tensor.
+ * Callers handling untrusted input should use this to validate sizes before
+ * constructing a TensorImpl.
  */
-ssize_t compute_numel(const TensorImpl::SizesType* sizes, ssize_t dim) {
-  ET_CHECK_MSG(
+Result<ssize_t> compute_numel(const TensorImpl::SizesType* sizes, ssize_t dim) {
+  ET_CHECK_OR_RETURN_ERROR(
       dim == 0 || sizes != nullptr,
+      InvalidArgument,
       "Sizes must be provided for non-scalar tensors");
   ssize_t numel = 1; // Zero-dimensional tensors (scalars) have numel == 1.
   for (const auto i : c10::irange(dim)) {
-    ET_CHECK_MSG(
+    ET_CHECK_OR_RETURN_ERROR(
         sizes[i] >= 0,
+        InvalidArgument,
         "Size must be non-negative, got %zd at dimension %zd",
         static_cast<ssize_t>(sizes[i]),
         i);
-    ET_CHECK_MSG(
+    ET_CHECK_OR_RETURN_ERROR(
         sizes[i] == 0 || numel <= SSIZE_MAX / sizes[i],
-        "Overflow computing numel: %zd * %zd would overflow ssize_t at dimension %zd",
-        numel,
-        static_cast<ssize_t>(sizes[i]),
+        InvalidArgument,
+        "Overflow computing numel at dimension %zd",
         i);
     numel *= sizes[i];
   }
@@ -54,6 +57,7 @@ TensorImpl::TensorImpl(
     ScalarType type,
     ssize_t dim,
     SizesType* sizes,
+    ssize_t numel,
     void* data,
     DimOrderType* dim_order,
     StridesType* strides,
@@ -63,7 +67,7 @@ TensorImpl::TensorImpl(
       strides_(strides),
       data_(data),
       dim_(dim),
-      numel_(compute_numel(sizes, dim)),
+      numel_(numel),
       numel_bound_(numel_),
       type_(type),
       shape_dynamism_(dynamism) {
@@ -71,6 +75,33 @@ TensorImpl::TensorImpl(
       isValid(type_), "Invalid type %" PRId8, static_cast<int8_t>(type_));
   ET_CHECK_MSG(dim_ >= 0, "Dimension must be non-negative, got %zd", dim_);
 }
+
+// Deprecated overload: computes numel internally.
+static ssize_t compute_numel_or_abort(
+    const TensorImpl::SizesType* sizes,
+    ssize_t dim) {
+  Result<ssize_t> result = compute_numel(sizes, dim);
+  ET_CHECK_MSG(result.ok(), "Failed to compute numel; see logs");
+  return result.get();
+}
+
+TensorImpl::TensorImpl(
+    ScalarType type,
+    ssize_t dim,
+    SizesType* sizes,
+    void* data,
+    DimOrderType* dim_order,
+    StridesType* strides,
+    TensorShapeDynamism dynamism)
+    : TensorImpl(
+          type,
+          dim,
+          sizes,
+          compute_numel_or_abort(sizes, dim),
+          data,
+          dim_order,
+          strides,
+          dynamism) {}
 
 size_t TensorImpl::nbytes() const {
   return numel_ * elementSize(type_);
@@ -124,7 +155,12 @@ Error TensorImpl::internal_resize_contiguous(ArrayRef<SizesType> new_sizes) {
       // TODO(T175194371): Unbounded dynamic tensor resizing is not yet
       // supported: treat them as upper-bounded.
     case TensorShapeDynamism::DYNAMIC_UNBOUND: {
-      const auto new_numel = compute_numel(new_sizes.data(), dim_);
+      Result<ssize_t> new_numel_result = compute_numel(new_sizes.data(), dim_);
+      ET_CHECK_OR_RETURN_ERROR(
+          new_numel_result.ok(),
+          InvalidArgument,
+          "Failed to compute numel for new sizes");
+      const ssize_t new_numel = new_numel_result.get();
 
       ET_CHECK_OR_RETURN_ERROR(
           static_cast<size_t>(new_numel) <= numel_bound_,

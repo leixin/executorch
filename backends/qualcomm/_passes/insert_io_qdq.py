@@ -118,7 +118,9 @@ class InsertIOQDQ(ExportPass):
                     user.replace_input_with(node, inserted_node)
 
     def _insert(self, graph_module: torch.fx.GraphModule) -> torch.fx.GraphModule:
-        for n in graph_module.graph.nodes:
+        # Snapshot nodes: inserting Q/DQ nodes mutates the graph's linked list,
+        # so iterating the live list can revisit newly inserted nodes.
+        for n in list(graph_module.graph.nodes):
             # do nothing when a node is expected to output a quant tensor
             if n.meta.get(QCOM_QUANTIZED_IO):
                 continue
@@ -141,10 +143,11 @@ class InsertIOQDQ(ExportPass):
             if n.meta.get(QCOM_QUANT_ATTRS) and any(
                 user.op == "output" for user in users
             ):
+                encoding = n.meta[QCOM_QUANT_ATTRS][QCOM_ENCODING]
                 self._insert_dequant_node(
                     graph_module,
                     n,
-                    self.q_dq_map[n.meta[QCOM_QUANT_ATTRS][QCOM_ENCODING]],
+                    self.q_dq_map.get(encoding, encoding),
                 )
 
     def call(self, graph_module: torch.fx.GraphModule):
